@@ -1,0 +1,16 @@
+# Ignore node_modules inside the server folder
+/server/node_modules/
+
+# Ignore environment config
+/server/.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# System files
+.DS_Store
+
+# Editor settings
+.vscode/
+.idea/
