@@ -1,5 +1,5 @@
 import express from "express";
-import { checkNFTHolding } from "./verifyWallet.js";
+import { getNFTHolding } from "./verifyWallet.js";
 import dotenv from "dotenv";
 import { Client, GatewayIntentBits } from "discord.js";
 
@@ -20,14 +20,21 @@ app.post("/verify", async (req, res) => {
   const { discordId, wallet } = req.body;
 
   try {
-    const isHolder = await checkNFTHolding(wallet);
-    if (!isHolder) return res.status(403).json({ error: "Not a holder" });
+    const balance = await getNFTHolding(wallet);
+    const num = BigInt(balance.toString()); 
+
+    if (num <= 0n) return res.status(403).json({ holder: false, nftsHolding: 0 });
 
     const guild = await client.guilds.fetch(process.env.GUILD_ID);
     const member = await guild.members.fetch(discordId);
-
     await member.roles.add(process.env.ROLE_ID);
-    return res.json({ success: true, message: "Role assigned" });
+
+    return res.json({
+      holder: true,
+      message: "Role assigned",
+      nftsHolding: num.toString()
+    });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal Error" });

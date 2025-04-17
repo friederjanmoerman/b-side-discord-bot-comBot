@@ -8,7 +8,7 @@ async function testVerify() {
     },
     body: JSON.stringify({
       discordId: "415215423756173333", 
-      wallet: "0x89EB24605D770621bEd86bf335cF99a8B0Ec8858", 
+      wallet: "0xC0708Fad27E4117705De0ddAd431593E1264B17B", 
     }),
   });
 
