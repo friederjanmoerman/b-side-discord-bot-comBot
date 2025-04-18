@@ -4,11 +4,10 @@ export function createNonce() {
   return Math.floor(Math.random() * 1e6).toString().padStart(6, '0');
 }
 
-export function storeSession(userId, wallet, code) {
+export function storeSession(userId, code) {
   sessionMap.set(userId, {
-    wallet,
     code,
-    created: Date.now(),
+    created: Date.now()
   });
 }
 
@@ -17,7 +16,7 @@ export function getSession(userId) {
   if (!session) return null;
 
   const age = Date.now() - session.created;
-  if (age > 10 * 60 * 1000) {
+  if (age > 10 * 60 * 1000) { 
     sessionMap.delete(userId);
     return null;
   }
