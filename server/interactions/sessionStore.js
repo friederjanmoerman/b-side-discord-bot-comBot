@@ -1,23 +1,30 @@
-import { randomBytes } from 'crypto';
-import { verifyMessage } from 'ethers';
+const sessionMap = new Map();
 
-const sessions = {};
-
-export function getNonceForUser(userId, wallet) {
-  const code = randomBytes(4).toString('hex').toUpperCase();
-  sessions[userId] = { wallet, code, timestamp: Date.now() };
-  return { code };
+export function createNonce() {
+  return Math.floor(Math.random() * 1e6).toString().padStart(6, '0');
 }
 
-export async function validateSignature(userId, wallet, signature) {
-  const session = sessions[userId];
-  if (!session) return false;
+export function storeSession(userId, wallet, code) {
+  sessionMap.set(userId, {
+    wallet,
+    code,
+    created: Date.now(),
+  });
+}
 
-  const msg = `Sign this message: Verify B Side | Code: ${session.code}`;
-  try {
-    const signer = verifyMessage(msg, signature);
-    return signer.toLowerCase() === wallet.toLowerCase();
-  } catch {
-    return false;
+export function getSession(userId) {
+  const session = sessionMap.get(userId);
+  if (!session) return null;
+
+  const age = Date.now() - session.created;
+  if (age > 10 * 60 * 1000) {
+    sessionMap.delete(userId);
+    return null;
   }
+
+  return session;
+}
+
+export function clearSession(userId) {
+  sessionMap.delete(userId);
 }
