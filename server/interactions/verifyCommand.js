@@ -6,30 +6,46 @@ import {
     EmbedBuilder
   } from 'discord.js';
   
-  import { createNonce, storeSession } from './sessionStore.js';
+  import {
+    createNonce,
+    storeSession,
+    canRunVerify,
+    recordVerifyRun
+  } from './sessionStore.js';
   
   export const data = new SlashCommandBuilder()
     .setName('verify')
     .setDescription('Start B Side NFT verification');
   
   export async function execute(interaction) {
-    // 🧠 Step 1: Immediately acknowledge to avoid timeout (fixes Unknown Interaction)
-    await interaction.deferReply({ flags: 1 << 6 }); // 1 << 6 = ephemeral
+    if (!canRunVerify(interaction.user.id)) {
+      return interaction.reply({
+        content: 'Please wait a few seconds before running `/verify` again.',
+        flags: 64,
+        ephemeral: true
+      });
+    }
   
-    // 🔐 Step 2: Generate session + signer link
+    recordVerifyRun(interaction.user.id);
+  
+    await interaction.deferReply({ flags: 64 });
+  
     const code = createNonce();
     storeSession(interaction.user.id, code);
   
-    const signerUrl = `https://b-side-web-signer-combot.vercel.app/?code=${code}`;
+    const signerUrl = `https://b-side-web-signer-combot.vercel.app/?code=${code}&user=${interaction.user.id}`;
   
-    // ✨ Step 3: Create content
     const embed = new EmbedBuilder()
-      .setTitle('🐝 B Side Verification')
-      .setDescription([
+    .setTitle('🐝 B Side Verification')
+    .setDescription([
         '1. Click **Sign Message** to connect your wallet and sign.',
-        '2. Then click **Paste Signature** to submit the result.'
-      ].join('\n'))
-      .setColor(0xffd700);
+        '2. Then click **Paste Signature** to submit the result.',
+        '',
+        '> *No transactions are signed.*',
+        '> *No wallet or Discord login is required.*',
+        '> *All actions are stateless, ephemeral, and fully verified on the backend.*'
+    ].join('\n'))
+    .setColor(0xffd700);
   
     const signButton = new ButtonBuilder()
       .setLabel('🖊 Sign Message')
@@ -43,7 +59,6 @@ import {
   
     const row = new ActionRowBuilder().addComponents(signButton, modalButton);
   
-    // 💬 Step 4: Edit reply after async prep is done
     await interaction.editReply({
       embeds: [embed],
       components: [row]
