@@ -28,10 +28,6 @@ client.on('interactionCreate', async (interaction) => {
     }
   });
 
-client.on('messageCreate', async (message) => {
-  await verify.handleMessage(message, client);
-});
-
 app.use(express.json());
 
 app.listen(port, () => console.log(`Server running on port ${port}`));

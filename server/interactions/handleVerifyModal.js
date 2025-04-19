@@ -4,6 +4,9 @@ import {
     ActionRowBuilder,
     TextInputStyle,
     InteractionType,
+    ButtonBuilder,
+    ButtonStyle,
+    EmbedBuilder,
   } from 'discord.js';
   
   import { verifyMessage } from 'ethers';
@@ -13,7 +16,7 @@ import {
     clearSession,
     markSessionUsed,
     isRateLimited,
-    updateLastAction
+    updateLastAction,
   } from './sessionStore.js';
   
   export async function handleInteraction(interaction, client) {
@@ -29,43 +32,43 @@ import {
       const modal = new ModalBuilder()
         .setCustomId('submit-signature')
         .setTitle('Paste Signature')
-        .addComponents(
-          new ActionRowBuilder().addComponents(signatureInput)
-        );
+        .addComponents(new ActionRowBuilder().addComponents(signatureInput));
   
       return interaction.showModal(modal);
     }
   
     // When user submits the modal
-    if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'submit-signature') {
+    if (
+      interaction.type === InteractionType.ModalSubmit &&
+      interaction.customId === 'submit-signature'
+    ) {
+      await interaction.deferReply({ ephemeral: false }); // Moved to top
+  
       const userId = interaction.user.id;
   
-      // Step 5: Rate limit check
+      // Rate limit check
       if (isRateLimited(userId)) {
-        return interaction.reply({
+        return interaction.editReply({
           content: 'Please wait a few seconds before trying again.',
-          flags: 64
         });
       }
       updateLastAction(userId);
   
       const signature = interaction.fields.getTextInputValue('signature')?.trim();
   
-      // Step 3: Signature format validation
+      // Signature format validation
       if (!/^0x[a-fA-F0-9]{130}$/.test(signature)) {
-        return interaction.reply({
+        return interaction.editReply({
           content: 'Invalid signature format.',
-          flags: 64,
         });
       }
   
       const session = getSession(userId);
   
-      // Step 1 & 2: Session must exist and not be used
+      // Session must exist and not be used
       if (!session || session.used) {
-        return interaction.reply({
+        return interaction.editReply({
           content: '❌ Your verification session is invalid or already used. Please try `/verify` again.',
-          flags: 64,
         });
       }
   
@@ -76,54 +79,68 @@ import {
         recovered = verifyMessage(fullMessage, signature);
       } catch (err) {
         console.error('[VERIFY] Signature verification failed:', err);
-      
+  
         const retryRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setCustomId('start-verification')
             .setLabel('Retry Verification')
             .setStyle(ButtonStyle.Primary)
         );
-      
-        return interaction.reply({
-          content: 'Signature verification failed. Your session might be expired or invalid.\nClick below to restart verification.',
+  
+        return interaction.editReply({
+          content:
+            'Signature verification failed. Your session might be expired or invalid.\nClick below to restart verification.',
           components: [retryRow],
-          flags: 64
         });
       }
-      
   
       console.table({
         'User ID': userId,
         'Recovered Wallet': recovered,
         'Message': fullMessage,
         'Signature': signature.slice(0, 6) + '...' + signature.slice(-6),
-      });      
+      });
   
       try {
         const balance = await getNFTHolding(recovered);
-        if (BigInt(balance.toString()) > 0n) {
+        const beeCount = BigInt(balance);
+        const isSwarm = beeCount > 20n;
+  
+        if (beeCount > 0n) {
           const guild = await client.guilds.fetch(process.env.GUILD_ID);
           const member = await guild.members.fetch(userId);
           await member.roles.add(process.env.ROLE_ID);
   
-          markSessionUsed(userId); // prevent replay
+          markSessionUsed(userId);
           clearSession(userId);
   
-          return interaction.reply({
-            content: `✅ Verified and role assigned! NFT balance: ${balance}`,
-            flags: 64,
+          const description = [
+            `🌼 We are welcoming <@${userId}> and **${beeCount} Bees** to the Hive!`,
+            isSwarm ? '**Wow. That’s a swarm!**' : null,
+          ]
+            .filter(Boolean)
+            .join('\n');
+  
+          const embed = new EmbedBuilder()
+            .setColor(0xfdf16d)
+            .setDescription(description);
+  
+          return interaction.editReply({
+            embeds: [embed],
           });
         } else {
-          return interaction.reply({
-            content: '❌ You do not hold a B Side NFT.',
-            flags: 64,
+          const embed = new EmbedBuilder()
+            .setColor(0x2f3136)
+            .setDescription(`<@${userId}> doesn’t hold any Bees yet.`);
+  
+          return interaction.editReply({
+            embeds: [embed],
           });
         }
       } catch (err) {
         console.error('[VERIFY] NFT Check / Role Error:', err);
-        return interaction.reply({
+        return interaction.editReply({
           content: '❌ Internal error during verification.',
-          flags: 64,
         });
       }
     }
