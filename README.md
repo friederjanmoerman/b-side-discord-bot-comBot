@@ -1,6 +1,6 @@
 # comBot — Holder Verification Discord Bot for B Side
 
-comBot is a custom Discord bot designed for the **B Side** NFT community by Hardcodepunk (Frieder Jan Moerman) on **Berachain**. It provides **wallet-based verification** for NFT holders, assigns roles based on ownership of the collection, and includes security and UX features inspired bythe **Booga Beras** Discord bot. Instead of an Opensea bio flow, opted for signing a message with wallet on a frontend.
+comBot is a custom Discord bot designed for the **B Side** NFT community by Hardcodepunk (Frieder Jan Moerman) on **Berachain**. It provides **wallet-based verification** for NFT holders, assigns roles based on ownership of the collection, and includes security and UX features inspired by the **Booga Beras** Discord bot. Instead of an Opensea bio flow, opted for signing a message with wallet on a frontend.
 
 ---
 
