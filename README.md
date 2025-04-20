@@ -13,6 +13,13 @@ comBot is a custom Discord bot designed for the **B Side** NFT community by Hard
   Verifies ownership of the official B Side collection:  
   `0xfb497d7491ac6ec07a3f102d2c37f456b067bbe1` (Berachain Mainnet).
 
+  ([On Kingdomly](https://marketplace.kingdomly.app/collection/berachain/0xfb497d7491ac6ec07a3f102d2c37f456b067bbe1))
+  ([On MagicEden](https://magiceden.io/collections/berachain/0xfb497d7491ac6ec07a3f102d2c37f456b067bbe1))
+  https://opensea.io/collection/b-side-4
+  ([On Opensea](https://opensea.io/collection/b-side-4))
+
+  Founded by FedPed and 0x_moonlight (Hardcodepunk, Frieder Jan Moerman.. )
+
 - **Automatic Role Assignment**  
   Grants Discord roles based on NFT ownership status.
 
@@ -32,7 +39,7 @@ comBot is a custom Discord bot designed for the **B Side** NFT community by Hard
 - **Discord.js**
 - **ethers.js** for signature recovery and on-chain data
 - **Berachain Mainnet RPC**
-- **Vercel** for signer frontend ([Signer App](https://b-side-web-signer-combot.vercel.app/))
+- **Vercel** for signer frontend
 - **Railway** for deploying
 
 ---
