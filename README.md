@@ -101,9 +101,9 @@ node index.js
 
 ---
 
-## Contributors
+## Artist
 
-- [![X](https://img.shields.io/badge/X-FedPed__BSide-000?logo=x&logoColor=white&style=flat-square)](https://x.com/FedPed_BSide)
+[![X](https://img.shields.io/badge/X-FedPed__BSide-000?logo=x&logoColor=white&style=flat-square)](https://x.com/FedPed_BSide)
 
 ---
 
