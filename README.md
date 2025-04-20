@@ -13,9 +13,7 @@ comBot is a custom Discord bot designed for the **B Side** NFT community by Hard
   Verifies ownership of the official B Side collection:  
   `0xfb497d7491ac6ec07a3f102d2c37f456b067bbe1` (Berachain Mainnet).
 
-  On [Kingdomly](https://marketplace.kingdomly.app/collection/berachain/0xfb497d7491ac6ec07a3f102d2c37f456b067bbe1)
-  On [MagicEden](https://magiceden.io/collections/berachain/0xfb497d7491ac6ec07a3f102d2c37f456b067bbe1)
-  On [Opensea](https://opensea.io/collection/b-side-4)
+  [Kingdomly](https://marketplace.kingdomly.app/collection/berachain/0xfb497d7491ac6ec07a3f102d2c37f456b067bbe1) — [MagicEden](https://magiceden.io/collections/berachain/0xfb497d7491ac6ec07a3f102d2c37f456b067bbe1) — [Opensea](https://opensea.io/collection/b-side-4)
 
   Founded by FedPed and 0x_moonlight (Hardcodepunk, Frieder Jan Moerman.. )
 
