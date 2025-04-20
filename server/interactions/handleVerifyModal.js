@@ -104,7 +104,7 @@ import {
       try {
         const balance = await getNFTHolding(recovered);
         const beeCount = BigInt(balance);
-        const isSwarm = beeCount > 20n;
+        const isSwarm = beeCount > 10n;
   
         if (beeCount > 0n) {
           const guild = await client.guilds.fetch(process.env.GUILD_ID);
@@ -115,7 +115,7 @@ import {
           clearSession(userId);
   
           const description = [
-            `🌼 We are welcoming <@${userId}> and **${beeCount} Bees** to the Hive!`,
+            `We are welcoming <@${userId}> and **${beeCount} Bees** to the Hive!`,
             isSwarm ? '**Wow. That’s a swarm!**' : null,
           ]
             .filter(Boolean)
