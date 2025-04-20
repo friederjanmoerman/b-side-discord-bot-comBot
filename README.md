@@ -26,7 +26,7 @@ comBot is a custom Discord bot designed for the **B Side** NFT community by Hard
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Node.js & Javascript**
 - **Discord.js**
@@ -37,7 +37,7 @@ comBot is a custom Discord bot designed for the **B Side** NFT community by Hard
 
 ---
 
-## ✨ Verification Flow
+## Verification Flow
 
 1. User types `/verify` in a Discord server where comBot is installed.
 2. Bot sends a button linking to the signer page.
