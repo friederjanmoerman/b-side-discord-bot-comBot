@@ -9,7 +9,6 @@ const abi = [
 const provider = new JsonRpcProvider(process.env.RPC_URL);
 const contract = new Contract(process.env.NFT_CONTRACT_ADDRESS, abi, provider);
 
-// In-memory cache: { address: { value: BigInt, timestamp: number } }
 const balanceCache = new Map();
 const CACHE_DURATION_MS = 15 * 1000;
 

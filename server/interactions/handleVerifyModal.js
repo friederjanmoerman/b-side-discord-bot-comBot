@@ -42,7 +42,7 @@ import {
       interaction.type === InteractionType.ModalSubmit &&
       interaction.customId === 'submit-signature'
     ) {
-      await interaction.deferReply({ ephemeral: false }); // Moved to top
+      await interaction.deferReply({ ephemeral: false }); 
   
       const userId = interaction.user.id;
   

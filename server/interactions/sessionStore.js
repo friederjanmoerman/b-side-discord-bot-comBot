@@ -7,7 +7,7 @@ export function createNonce() {
 }
 
 export function storeSession(userId, code) {
-  clearSession(userId); // Auto-clear existing session
+  clearSession(userId);
   sessionMap.set(userId, {
     code,
     created: Date.now(),
