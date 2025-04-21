@@ -110,6 +110,11 @@ import {
           const guild = await client.guilds.fetch(process.env.GUILD_ID);
           const member = await guild.members.fetch(userId);
           await member.roles.add(process.env.ROLE_ID);
+
+        if (beeCount >= 10n && process.env.ROLE_ID_SWARM) {
+            await member.roles.add(process.env.ROLE_ID_SWARM);
+        }
+
   
           markSessionUsed(userId);
           clearSession(userId);
