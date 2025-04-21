@@ -9,7 +9,7 @@ import {
     EmbedBuilder,
   } from 'discord.js';
   
-  import { verifyMessage } from 'ethers';
+  import { verifyMessage, Contract, JsonRpcProvider } from 'ethers';
   import { getNFTHolding } from '../verifyWallet.js';
   import {
     getSession,
@@ -19,8 +19,13 @@ import {
     updateLastAction,
   } from './sessionStore.js';
   
+  const oneOfOnes = [517, 811, 524];
+  
+  const abi = ["function ownerOf(uint256 tokenId) view returns (address)"];
+  const provider = new JsonRpcProvider(process.env.RPC_URL);
+  const contract = new Contract(process.env.NFT_CONTRACT_ADDRESS, abi, provider);
+  
   export async function handleInteraction(interaction, client) {
-    // When user clicks "Paste Signature"
     if (interaction.customId === 'start-verification') {
       const signatureInput = new TextInputBuilder()
         .setCustomId('signature')
@@ -37,16 +42,14 @@ import {
       return interaction.showModal(modal);
     }
   
-    // When user submits the modal
     if (
       interaction.type === InteractionType.ModalSubmit &&
       interaction.customId === 'submit-signature'
     ) {
-      await interaction.deferReply({ ephemeral: false }); 
+      await interaction.deferReply({ ephemeral: false });
   
       const userId = interaction.user.id;
   
-      // Rate limit check
       if (isRateLimited(userId)) {
         return interaction.editReply({
           content: 'Please wait a few seconds before trying again.',
@@ -56,7 +59,6 @@ import {
   
       const signature = interaction.fields.getTextInputValue('signature')?.trim();
   
-      // Signature format validation
       if (!/^0x[a-fA-F0-9]{130}$/.test(signature)) {
         return interaction.editReply({
           content: 'Invalid signature format.',
@@ -65,7 +67,6 @@ import {
   
       const session = getSession(userId);
   
-      // Session must exist and not be used
       if (!session || session.used) {
         return interaction.editReply({
           content: '❌ Your verification session is invalid or already used. Please try `/verify` again.',
@@ -78,8 +79,6 @@ import {
       try {
         recovered = verifyMessage(fullMessage, signature);
       } catch (err) {
-        console.error('[VERIFY] Signature verification failed:', err);
-  
         const retryRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setCustomId('start-verification')
@@ -94,34 +93,44 @@ import {
         });
       }
   
-      console.table({
-        'User ID': userId,
-        'Recovered Wallet': recovered,
-        'Message': fullMessage,
-        'Signature': signature.slice(0, 6) + '...' + signature.slice(-6),
-      });
-  
       try {
         const balance = await getNFTHolding(recovered);
         const beeCount = BigInt(balance);
-        const isSwarm = beeCount > 10n;
+        const isSwarm = beeCount >= 10n;
   
         if (beeCount > 0n) {
           const guild = await client.guilds.fetch(process.env.GUILD_ID);
           const member = await guild.members.fetch(userId);
+  
           await member.roles.add(process.env.ROLE_ID);
-
-        if (beeCount >= 10n && process.env.ROLE_ID_SWARM) {
+  
+          if (isSwarm && process.env.ROLE_ID_SWARM) {
             await member.roles.add(process.env.ROLE_ID_SWARM);
-        }
-
+          }
+  
+          let holdsUnique = false;
+  
+          for (const tokenId of oneOfOnes) {
+            try {
+              const owner = await contract.ownerOf(tokenId);
+              if (owner.toLowerCase() === recovered.toLowerCase()) {
+                holdsUnique = true;
+                break;
+              }
+            } catch (e) {}
+          }
+  
+          if (holdsUnique && process.env.ROLE_ID_UNIQUE) {
+            await member.roles.add(process.env.ROLE_ID_UNIQUE);
+          }
   
           markSessionUsed(userId);
           clearSession(userId);
   
           const description = [
-            `We are welcoming <@${userId}> and **${beeCount} Bees** to the Hive!`,
+            `🌼 We are welcoming <@${userId}> and **${beeCount} Bees** to the Hive!`,
             isSwarm ? '**Wow. That’s a swarm!**' : null,
+            holdsUnique ? '*This one’s unique.* ✨' : null,
           ]
             .filter(Boolean)
             .join('\n');
@@ -143,7 +152,6 @@ import {
           });
         }
       } catch (err) {
-        console.error('[VERIFY] NFT Check / Role Error:', err);
         return interaction.editReply({
           content: '❌ Internal error during verification.',
         });
