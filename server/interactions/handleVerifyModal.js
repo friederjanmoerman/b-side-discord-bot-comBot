@@ -128,9 +128,9 @@ import {
           clearSession(userId);
   
           const description = [
-            `🌼 We are welcoming <@${userId}> and **${beeCount} Bees** to the Hive!`,
-            isSwarm ? '**Wow. That’s a swarm!**' : null,
-            holdsUnique ? '*This one’s unique.* ✨' : null,
+            `We are welcoming <@${userId}> and **${beeCount} Bees** to the Hive!`,
+            isSwarm ? 'Welcome **Hive Lord**. That is a swarm!' : null,
+            holdsUnique ? '*Some of them look really **unique**.* ✨' : null,
           ]
             .filter(Boolean)
             .join('\n');
