@@ -129,7 +129,7 @@ import {
   
           const description = [
             `We are welcoming <@${userId}> and **${beeCount} Bees** to the Hive!`,
-            isSwarm ? 'Welcome **Hive Lord**. That is a swarm!' : null,
+            isSwarm ? 'You are a **Hive Lord**. That is a swarm!' : null,
             holdsUnique ? '*Some of them look really **unique**.* ✨' : null,
           ]
             .filter(Boolean)
