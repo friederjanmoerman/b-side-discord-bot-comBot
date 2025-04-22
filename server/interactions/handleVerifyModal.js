@@ -79,6 +79,14 @@ import {
       let recovered;
       try {
         recovered = verifyMessage(fullMessage, signature);
+
+        console.table({
+          'User ID': userId,
+          'Recovered Wallet': recovered,
+          'Message': fullMessage,
+          'Signature': signature.slice(0, 16) + '...' // truncate for readability
+        });
+        
       } catch (err) {
         const retryRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
@@ -93,25 +101,6 @@ import {
           components: [retryRow],
         });
       }
-
-      console.log('[VERIFY] Checking NFT balance and roles for:', recovered);
-
-
-      console.log('Using Role IDs:', {
-        base: process.env.ROLE_ID,
-        swarm: process.env.ROLE_ID_SWARM,
-        unique: process.env.ROLE_ID_UNIQUE
-      });
-
-      const guild = await client.guilds.fetch(process.env.GUILD_ID);
-const allRoles = await guild.roles.fetch();
-console.log("📜 All roles in this guild:");
-console.table(
-  allRoles.map(role => ({
-    name: role.name,
-    id: role.id
-  }))
-);
 
   
       try {
