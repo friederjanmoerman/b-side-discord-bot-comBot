@@ -20,12 +20,6 @@ import {
   } from './sessionStore.js';
   
   const oneOfOnes = [517, 811, 524];
-
-  console.log('Using Role IDs:', {
-    base: process.env.ROLE_ID,
-    swarm: process.env.ROLE_ID_SWARM,
-    unique: process.env.ROLE_ID_UNIQUE
-  });
   
   
   const abi = ["function ownerOf(uint256 tokenId) view returns (address)"];
@@ -102,6 +96,12 @@ import {
 
       console.log('[VERIFY] Checking NFT balance and roles for:', recovered);
 
+
+      console.log('Using Role IDs:', {
+        base: process.env.ROLE_ID,
+        swarm: process.env.ROLE_ID_SWARM,
+        unique: process.env.ROLE_ID_UNIQUE
+      });
   
       try {
         const balance = await getNFTHolding(recovered);
