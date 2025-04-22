@@ -19,9 +19,13 @@ import {
     updateLastAction,
   } from './sessionStore.js';
   
-  const oneOfOnes = [517, 811, 524];
-  
-  
+  const oneOfOnes = [
+    504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515, 516, 517, 518, 519,
+    520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530, 531, 532, 533, 534, 535,
+    536, 537, 538, 539, 540, 541, 619, 751, 811, 949, 950, 951, 952, 953, 954, 955,
+    956, 958
+  ];
+
   const abi = ["function ownerOf(uint256 tokenId) view returns (address)"];
   const provider = new JsonRpcProvider(process.env.RPC_URL);
   const contract = new Contract(process.env.NFT_CONTRACT_ADDRESS, abi, provider);
@@ -79,13 +83,6 @@ import {
       let recovered;
       try {
         recovered = verifyMessage(fullMessage, signature);
-
-        console.table({
-          'User ID': userId,
-          'Recovered Wallet': recovered,
-          'Message': fullMessage,
-          'Signature': signature.slice(0, 16) + '...' // truncate for readability
-        });
         
       } catch (err) {
         const retryRow = new ActionRowBuilder().addComponents(
