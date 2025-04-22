@@ -92,6 +92,9 @@ import {
           components: [retryRow],
         });
       }
+
+      console.log('[VERIFY] Checking NFT balance and roles for:', recovered);
+
   
       try {
         const balance = await getNFTHolding(recovered);
@@ -151,11 +154,13 @@ import {
             embeds: [embed],
           });
         }
-      } catch (err) {
+    } catch (err) {
+        console.error('[VERIFY] NFT Check / Role Error:', err);
         return interaction.editReply({
           content: '❌ Internal error during verification.',
         });
       }
+      
     }
   }
   
