@@ -102,6 +102,17 @@ import {
         swarm: process.env.ROLE_ID_SWARM,
         unique: process.env.ROLE_ID_UNIQUE
       });
+
+      const guild = await client.guilds.fetch(process.env.GUILD_ID);
+const allRoles = await guild.roles.fetch();
+console.log("📜 All roles in this guild:");
+console.table(
+  allRoles.map(role => ({
+    name: role.name,
+    id: role.id
+  }))
+);
+
   
       try {
         const balance = await getNFTHolding(recovered);
