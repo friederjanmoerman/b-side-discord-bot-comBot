@@ -33,7 +33,7 @@ import {
     const code = createNonce();
     storeSession(interaction.user.id, code);
   
-    const signerUrl = `https://b-side-web-signer-combot.vercel.app/?code=${code}&user=${interaction.user.id}`;
+    const signerUrl = `https://verify.bombolabs.xyz/?code=${code}&user=${interaction.user.id}`;
   
     const embed = new EmbedBuilder()
     .setTitle('🐝 B Side Verification')
