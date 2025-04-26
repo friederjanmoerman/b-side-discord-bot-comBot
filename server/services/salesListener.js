@@ -199,57 +199,80 @@ async function fetchSalePriceFromTransaction(txHash, buyerAddress) {
   }
 }
 
-// 🧪 Test by finding real sale
+// 🧪 Real-chain deep scan until enough sales found
 async function testRealSale(ws) {
   try {
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-    console.log('⚡ Test: Scanning recent blocks for real sale...');
+    console.log('⚡ Test: Scanning recent blocks for real sales...');
+
+    let salesFound = 0;
+    const salesTarget = 7; // 👈 Change this number if you want 2, 3, 5 etc.
 
     let currentBlock = await provider.getBlockNumber();
     console.log('🧩 Current block:', currentBlock);
 
-    const fromBlock = Math.max(currentBlock - 3000, 0);
-    const toBlock = currentBlock;
+    while (salesFound < salesTarget) {
+      const fromBlock = Math.max(currentBlock - 2000, 0);
+      const toBlock = currentBlock;
 
-    const filter = {
-      address: process.env.NFT_CONTRACT_ADDRESS,
-      topics: ['0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'],
-      fromBlock,
-      toBlock
-    };
+      const filter = {
+        address: process.env.NFT_CONTRACT_ADDRESS,
+        topics: ['0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'],
+        fromBlock,
+        toBlock
+      };
 
-    const logs = await provider.getLogs(filter);
-    console.log(`📦 Found ${logs.length} transfer logs.`);
+      const logs = await provider.getLogs(filter);
+      console.log(`📦 Checked ${logs.length} logs from block ${fromBlock} to ${toBlock}`);
 
-    for (let i = logs.length - 1; i >= 0; i--) {
-      const log = logs[i];
-      const txHash = log.transactionHash;
-      const topics = log.topics;
-      const from = `0x${topics[1].slice(26)}`;
-      const to = `0x${topics[2].slice(26)}`;
+      for (let i = logs.length - 1; i >= 0; i--) {
+        const log = logs[i];
+        const txHash = log.transactionHash;
+        const topics = log.topics;
+        const from = `0x${topics[1].slice(26)}`;
+        const to = `0x${topics[2].slice(26)}`;
 
-      console.log(`🔍 Checking token ${parseInt(topics[3], 16)} from ${from} to ${to}`);
+        console.log(`🔍 Checking token ${parseInt(topics[3], 16)} from ${from} to ${to}`);
 
-      const sale = await fetchSalePriceFromTransaction(txHash, to);
+        const sale = await fetchSalePriceFromTransaction(txHash, to);
 
-      if (sale) {
-        console.log(`✅ Found sale: ${formatBera(sale.totalPaid)} BERA`);
-        console.log('🔔 Emitting simulated WebSocket sale...');
-        const fakeEvent = {
-          params: {
-            result: {
-              topics,
-              transactionHash: txHash
+        if (sale) {
+          salesFound++;
+          console.log(`✅ Found sale #${salesFound}: ${formatBera(sale.totalPaid)} BERA`);
+
+          const fakeEvent = {
+            params: {
+              result: {
+                topics,
+                transactionHash: txHash
+              }
             }
+          };
+          ws.emit('message', JSON.stringify(fakeEvent));
+
+          if (salesFound >= salesTarget) {
+            console.log(`🏁 Test: ${salesFound} sales emitted, done.`);
+            return;
           }
-        };
-        ws.emit('message', JSON.stringify(fakeEvent));
+        } else {
+          console.log('⚠️ No sale found in this tx, skipping.');
+        }
+      }
+
+      currentBlock = fromBlock - 1;
+      if (currentBlock <= 0) {
+        console.warn('❌ Reached genesis block, no more blocks to search.');
         return;
       }
-    }
 
-    console.warn('❌ No real sales found.');
+      await delay(500); // small pause to avoid spamming
+    }
   } catch (err) {
     console.error('❌ Test fetch error:', err.message);
   }
+}
+
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
