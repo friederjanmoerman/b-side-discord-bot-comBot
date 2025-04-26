@@ -1,6 +1,7 @@
 // services/salesListener.js
 import WebSocket from 'ws';
-import fetch from 'node-fetch'; // We need this to call Alchemy REST API
+import fetch from 'node-fetch'; // Needed for API calls
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 
 export function startSalesListener(client) {
   const ws = new WebSocket(process.env.ALCHEMY_WS_URL);
@@ -15,9 +16,9 @@ export function startSalesListener(client) {
       params: [
         "logs",
         {
-          address: process.env.NFT_CONTRACT_ADDRESS, // Correct env var
+          address: process.env.NFT_CONTRACT_ADDRESS,
           topics: [
-            "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef" // ERC-721 Transfer event
+            "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
           ]
         }
       ]
@@ -41,29 +42,39 @@ export function startSalesListener(client) {
       try {
         const channel = await client.channels.fetch(process.env.CHANNEL_ID_SALES);
 
-        // Fetch NFT metadata (image, name, etc.)
+        // 🎯 Fetch NFT metadata
         const metadataUrl = `https://nft.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}/getNFTMetadata?contractAddress=${process.env.NFT_CONTRACT_ADDRESS}&tokenId=${tokenId}`;
-        
         const metaResponse = await fetch(metadataUrl);
         const metaJson = await metaResponse.json();
 
         const imageUrl = metaJson?.media?.[0]?.gateway || null;
         const nftName = metaJson?.title || `Token #${tokenId}`;
 
+        const nftLink = `https://routescan.io/bera/token/${process.env.NFT_CONTRACT_ADDRESS}?a=${tokenId}`;
+        const fromLink = `https://routescan.io/bera/address/${from}`;
+        const toLink = `https://routescan.io/bera/address/${to}`;
+
         const embed = {
-          title: '🎉 New NFT Sale!',
-          description: `**${nftName}** sold!`,
+          title: `🎉 New NFT Sale!`,
+          description: `[**${nftName}**](${nftLink}) sold!`,
           fields: [
-            { name: 'Token ID', value: `#${tokenId}`, inline: true },
-            { name: 'Seller', value: `[${from.slice(0, 6)}...${from.slice(-4)}](https://routescan.io/bera/address/${from})`, inline: true },
-            { name: 'Buyer', value: `[${to.slice(0, 6)}...${to.slice(-4)}](https://routescan.io/bera/address/${to})`, inline: true },
+            { name: 'Token ID', value: `[#${tokenId}](${nftLink})`, inline: true },
+            { name: 'Seller', value: `[${from.slice(0, 6)}...${from.slice(-4)}](${fromLink})`, inline: true },
+            { name: 'Buyer', value: `[${to.slice(0, 6)}...${to.slice(-4)}](${toLink})`, inline: true },
           ],
           image: imageUrl ? { url: imageUrl } : undefined,
           timestamp: new Date().toISOString(),
           color: 0xfdf16d,
         };
 
-        await channel.send({ embeds: [embed] });
+        const button = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setLabel('View on Routescan')
+            .setStyle(ButtonStyle.Link)
+            .setURL(nftLink)
+        );
+
+        await channel.send({ embeds: [embed], components: [button] });
         console.log('✅ Sale posted to Discord.');
       } catch (err) {
         console.error('❌ Failed to send sale message:', err);
