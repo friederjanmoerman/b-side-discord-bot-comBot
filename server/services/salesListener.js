@@ -42,20 +42,20 @@ export function startSalesListener(client) {
       try {
         const channel = await client.channels.fetch(process.env.CHANNEL_ID_SALES);
 
-        // 🎯 Fetch NFT metadata
-        const metadataUrl = `https://nft.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}/getNFTMetadata?contractAddress=${process.env.NFT_CONTRACT_ADDRESS}&tokenId=${tokenId}`;
+        // Fetch NFT metadata
+        const metadataUrl = `https://berachain-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}/getNFTMetadata?contractAddress=${process.env.NFT_CONTRACT_ADDRESS}&tokenId=${tokenId}`;
         const metaResponse = await fetch(metadataUrl);
         const metaJson = await metaResponse.json();
 
         const imageUrl = metaJson?.media?.[0]?.gateway || null;
         const nftName = metaJson?.title || `Token #${tokenId}`;
 
-        const nftLink = `https://routescan.io/bera/token/${process.env.NFT_CONTRACT_ADDRESS}?a=${tokenId}`;
-        const fromLink = `https://routescan.io/bera/address/${from}`;
-        const toLink = `https://routescan.io/bera/address/${to}`;
+        const nftLink = `https://marketplace.kingdomly.app/collection/berachain/b-side-4/${tokenId}`;
+        const fromLink = `https://marketplace.kingdomly.app/inventory/${from}`;
+        const toLink = `https://marketplace.kingdomly.app/inventory/${to}`;
 
         const embed = {
-          title: `🎉 New NFT Sale!`,
+          title: `🐝 Bzz!`,
           description: `[**${nftName}**](${nftLink}) sold!`,
           fields: [
             { name: 'Token ID', value: `[#${tokenId}](${nftLink})`, inline: true },
@@ -69,7 +69,7 @@ export function startSalesListener(client) {
 
         const button = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setLabel('View on Routescan')
+            .setLabel('View on Kingdomly')
             .setStyle(ButtonStyle.Link)
             .setURL(nftLink)
         );
