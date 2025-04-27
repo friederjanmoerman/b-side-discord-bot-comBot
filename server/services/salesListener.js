@@ -2,7 +2,7 @@ import WebSocket from 'ws';
 import fetch from 'node-fetch';
 import { ethers } from 'ethers';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { fetchFloorPriceFromMagicEden } from './fetchFloorPriceFromMagicEden.js';
+import fetchFloorPriceFromMagicEden  from './fetchFloorPriceFromMagicEden.js';
 
 export function startSalesListener(client) {
   const ws = new WebSocket(process.env.ALCHEMY_WS_URL);
