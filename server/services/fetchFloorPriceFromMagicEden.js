@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 let cachedFloorPrice = null;
 let lastFetchTime = 0;
 
