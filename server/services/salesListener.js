@@ -67,7 +67,7 @@ export function startSalesListener(client) {
         const toLink = `https://marketplace.kingdomly.app/inventory/${to}`;
 
         const embed = {
-          title: `🎉 New B-Side Sale!`,
+          title: `🐝 Bzz!`,
           description: `[**${nftName}**](${nftLink}) sold!`,
           fields: [
             { name: 'Token ID', value: `[#${tokenId}](${nftLink})`, inline: true },
@@ -76,7 +76,7 @@ export function startSalesListener(client) {
             { name: 'Buyer Paid', value: `${formatBera(totalPaid)} BERA`, inline: true },
             { name: 'Seller Received', value: `${formatBera(sellerReceived)} BERA`, inline: true },
             { name: 'Marketplace Fee', value: `${formatBera(marketplaceFee)} BERA`, inline: true },
-            { name: 'Royalties', value: `${formatBera(royaltiesFee)} BERA`, inline: true },
+            // { name: 'Royalties', value: `${formatBera(royaltiesFee)} BERA`, inline: true },
           ],
           image: imageUrl ? { url: imageUrl } : undefined,
           timestamp: new Date().toISOString(),
@@ -227,7 +227,7 @@ async function testRealSale(ws) {
     console.log('⚡ Test: Scanning recent blocks for real sales...');
 
     let salesFound = 0;
-    const salesTarget = 7;
+    const salesTarget = 5;
 
     let currentBlock = await provider.getBlockNumber();
     console.log('🧩 Current block:', currentBlock);
@@ -272,7 +272,7 @@ async function testRealSale(ws) {
           ws.emit('message', JSON.stringify(fakeEvent));
 
           if (salesFound >= salesTarget) {
-            console.log(`🏁 Test: ${salesFound} sales emitted, done.`);
+            console.log(`Test: ${salesFound} sales emitted, done.`);
             return;
           }
         } else {
