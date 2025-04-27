@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { Client, GatewayIntentBits } from 'discord.js';
 import * as verify from './interactions/verifyCommand.js';
 import { handleInteraction } from './interactions/handleVerifyModal.js';
+import { startSalesListener } from './services/salesListener.js';
 
 dotenv.config();
 
@@ -19,14 +20,20 @@ const client = new Client({
 });
 
 client.on('interactionCreate', async (interaction) => {
-    if (interaction.isChatInputCommand() && interaction.commandName === 'verify') {
-      await verify.execute(interaction);
-    }
+  if (interaction.isChatInputCommand() && interaction.commandName === 'verify') {
+    await verify.execute(interaction);
+  }
+
+  if (interaction.isButton() || interaction.isModalSubmit()) {
+    await handleInteraction(interaction, client);
+  }
+});
+
+client.once('ready', () => {
+  console.log(`Bot logged in as ${client.user.tag}`);
+  startSalesListener(client);
+});
   
-    if (interaction.isButton() || interaction.isModalSubmit()) {
-      await handleInteraction(interaction, client);
-    }
-  });
 
 app.use(express.json());
 
