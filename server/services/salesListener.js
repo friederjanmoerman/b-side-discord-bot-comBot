@@ -1,4 +1,5 @@
 // services/salesListener.js
+
 import WebSocket from 'ws';
 import fetch from 'node-fetch';
 import { ethers } from 'ethers';
@@ -66,7 +67,7 @@ export function startSalesListener(client) {
         const toLink = `https://marketplace.kingdomly.app/inventory/${to}`;
 
         const embed = {
-          title: `🎉 New B-Side Sale!`,
+          title: `🐝 Bzz!`,
           description: `[**${nftName}**](${nftLink}) sold!`,
           fields: [
             { name: 'Token ID', value: `[#${tokenId}](${nftLink})`, inline: true },
@@ -75,7 +76,7 @@ export function startSalesListener(client) {
             { name: 'Buyer Paid', value: `${formatBera(totalPaid)} BERA`, inline: true },
             { name: 'Seller Received', value: `${formatBera(sellerReceived)} BERA`, inline: true },
             { name: 'Marketplace Fee', value: `${formatBera(marketplaceFee)} BERA`, inline: true },
-            { name: 'Royalties', value: `${formatBera(royaltiesFee)} BERA`, inline: true },
+            // { name: 'Royalties', value: `${formatBera(royaltiesFee)} BERA`, inline: true },
           ],
           image: imageUrl ? { url: imageUrl } : undefined,
           timestamp: new Date().toISOString(),
@@ -142,71 +143,91 @@ async function fetchSalePriceFromTransaction(txHash, buyerAddress) {
       log.address.toLowerCase() === '0x0000000000000068f116a894984e2db1123eb395'
     );
 
-    if (escrowLogs.length === 0) {
-      console.warn('⚠️ No Kingdomly escrow logs found.');
-      return null;
-    }
+    let totalPaid = null;
+    let royaltiesFee = 0n;
+    let marketplaceFee = 0n;
+    let sellerReceived = 0n;
 
-    const chunks = [];
-    for (const log of escrowLogs) {
-      const rawData = log.data.slice(2); // Remove '0x'
-      const splitChunks = rawData.match(/.{1,64}/g) || [];
-      for (const chunk of splitChunks) {
-        const value = BigInt('0x' + chunk);
-        if (value > 0n) {
-          chunks.push(value);
+    if (escrowLogs.length > 0) {
+      console.log('⚡ Kingdomly escrow logs found.');
+
+      const chunks = [];
+      for (const log of escrowLogs) {
+        const rawData = log.data.slice(2);
+        const splitChunks = rawData.match(/.{1,64}/g) || [];
+        for (const chunk of splitChunks) {
+          const value = BigInt('0x' + chunk);
+          if (value > 0n) {
+            chunks.push(value);
+          }
         }
       }
+
+      console.log('⚡ Kingdomly escrow chunks:', chunks.map(v => Number(v) / 1e18));
+
+      const candidates = chunks.filter(v => {
+        const num = Number(v) / 1e18;
+        return num >= 0.01 && num <= 10000;
+      });
+
+      if (candidates.length > 0) {
+        candidates.sort((a, b) => Number(b) - Number(a));
+        totalPaid = candidates[0];
+        const others = candidates.slice(1);
+
+        royaltiesFee = others.find(f => {
+          const ratio = Number(f) / Number(totalPaid);
+          return ratio > 0.045 && ratio < 0.055;
+        }) || 0n;
+
+        marketplaceFee = others.find(f => Number(f) / 1e18 < 0.1) || 0n;
+
+        sellerReceived = totalPaid - marketplaceFee - royaltiesFee;
+
+        console.log('✅ Kingdomly parsed:');
+        console.log(`- Total Paid: ${formatBera(totalPaid)} BERA`);
+        console.log(`- Seller Received: ${formatBera(sellerReceived)} BERA`);
+        console.log(`- Marketplace Fee: ${formatBera(marketplaceFee)} BERA`);
+        console.log(`- Royalties Fee: ${formatBera(royaltiesFee)} BERA`);
+
+        return { totalPaid, sellerReceived, marketplaceFee, royaltiesFee };
+      } else {
+        console.warn('⚠️ No valid escrow parsing → fallback to transaction value.');
+      }
+    } else {
+      console.warn('⚠️ No Kingdomly escrow logs → fallback to transaction value.');
     }
 
-    console.log('⚡ Kingdomly escrow chunks found:', chunks.map(v => Number(v) / 1e18));
+    // Fallback to tx.value for direct BERA sale
+    const tx = await provider.getTransaction(txHash);
 
-    // Remove crazy numbers (outside 0.01–10,000 BERA)
-    const candidates = chunks.filter(v => {
-      const num = Number(v) / 1e18;
-      return num >= 0.01 && num <= 10000;
-    });
+    if (tx?.value && tx.value > 0n) {
+      totalPaid = BigInt(tx.value);
+      sellerReceived = totalPaid;
 
-    if (candidates.length === 0) {
-      console.warn('⚠️ No valid sale candidates.');
+      console.log('✅ Native BERA sale detected.');
+      console.log(`- Total Paid: ${formatBera(totalPaid)} BERA`);
+      console.log(`- Seller Received: ${formatBera(sellerReceived)} BERA`);
+
+      return { totalPaid, sellerReceived, marketplaceFee: 0n, royaltiesFee: 0n };
+    } else {
+      console.warn('❌ No transaction value either, skipping.');
       return null;
     }
 
-    // Pick largest candidate
-    candidates.sort((a, b) => Number(b) - Number(a));
-    const totalPaid = candidates[0];
-    const others = candidates.slice(1);
-
-    const royaltiesFee = others.find(f => {
-      const ratio = Number(f) / Number(totalPaid);
-      return ratio > 0.045 && ratio < 0.055;
-    }) || 0n;
-
-    const marketplaceFee = others.find(f => Number(f) / 1e18 < 0.1) || 0n;
-
-    const sellerReceived = totalPaid - marketplaceFee - royaltiesFee;
-
-    console.log('✅ Kingdomly parsed:');
-    console.log(`- Total Paid: ${formatBera(totalPaid)} BERA`);
-    console.log(`- Seller Received: ${formatBera(sellerReceived)} BERA`);
-    console.log(`- Marketplace Fee: ${formatBera(marketplaceFee)} BERA`);
-    console.log(`- Royalties Fee: ${formatBera(royaltiesFee)} BERA`);
-
-    return { totalPaid, sellerReceived, marketplaceFee, royaltiesFee };
   } catch (err) {
     console.error('❌ Error parsing sale:', err);
     return null;
   }
 }
 
-// 🧪 Real-chain deep scan until enough sales found
 async function testRealSale(ws) {
   try {
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
     console.log('⚡ Test: Scanning recent blocks for real sales...');
 
     let salesFound = 0;
-    const salesTarget = 7; // 👈 Change this number if you want 2, 3, 5 etc.
+    const salesTarget = 5;
 
     let currentBlock = await provider.getBlockNumber();
     console.log('🧩 Current block:', currentBlock);
@@ -251,7 +272,7 @@ async function testRealSale(ws) {
           ws.emit('message', JSON.stringify(fakeEvent));
 
           if (salesFound >= salesTarget) {
-            console.log(`🏁 Test: ${salesFound} sales emitted, done.`);
+            console.log(`Test: ${salesFound} sales emitted, done.`);
             return;
           }
         } else {
@@ -265,13 +286,12 @@ async function testRealSale(ws) {
         return;
       }
 
-      await delay(500); // small pause to avoid spamming
+      await delay(500);
     }
   } catch (err) {
     console.error('❌ Test fetch error:', err.message);
   }
 }
-
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
