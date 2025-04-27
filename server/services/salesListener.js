@@ -1,9 +1,8 @@
-// services/salesListener.js
-
 import WebSocket from 'ws';
 import fetch from 'node-fetch';
 import { ethers } from 'ethers';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { fetchFloorPriceFromMagicEden } from './fetchFloorPriceFromMagicEden.js';
 
 export function startSalesListener(client) {
   const ws = new WebSocket(process.env.ALCHEMY_WS_URL);
@@ -66,31 +65,37 @@ export function startSalesListener(client) {
         const fromLink = `https://marketplace.kingdomly.app/inventory/${from}`;
         const toLink = `https://marketplace.kingdomly.app/inventory/${to}`;
 
+        const floorPrice = await fetchFloorPriceFromMagicEden('0xfb497d7491ac6ec07a3f102d2c37f456b067bbe1');
+
+        const fields = [
+          { name: 'Token ID', value: `[#${tokenId}](${nftLink})`, inline: true },
+          { name: 'Seller', value: `[${from.slice(0, 6)}...${from.slice(-4)}](${fromLink})`, inline: true },
+          { name: 'Buyer', value: `[${to.slice(0, 6)}...${to.slice(-4)}](${toLink})`, inline: true },
+          { name: 'Price', value: `${formatBera(totalPaid)} BERA`, inline: true },
+        ];
+        
+        if (floorPrice !== null) {
+          fields.push({ name: 'Floor Price', value: `${floorPrice} BERA`, inline: true });
+        }
+        
         const embed = {
           title: `🐝 Bzz!`,
           description: `[**${nftName}**](${nftLink}) sold!`,
-          fields: [
-            { name: 'Token ID', value: `[#${tokenId}](${nftLink})`, inline: true },
-            { name: 'Seller', value: `[${from.slice(0, 6)}...${from.slice(-4)}](${fromLink})`, inline: true },
-            { name: 'Buyer', value: `[${to.slice(0, 6)}...${to.slice(-4)}](${toLink})`, inline: true },
-            { name: 'Buyer Paid', value: `${formatBera(totalPaid)} BERA`, inline: true },
-            { name: 'Seller Received', value: `${formatBera(sellerReceived)} BERA`, inline: true },
-            { name: 'Marketplace Fee', value: `${formatBera(marketplaceFee)} BERA`, inline: true },
-            // { name: 'Royalties', value: `${formatBera(royaltiesFee)} BERA`, inline: true },
-          ],
-          image: imageUrl ? { url: imageUrl } : undefined,
-          timestamp: new Date().toISOString(),
-          color: 0xfdf16d,
+          image: { url: imageUrl }, 
+          fields,
         };
 
-        const button = new ActionRowBuilder().addComponents(
+        const buttonRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setLabel('View on Kingdomly')
+            .setLabel('View NFT')
             .setStyle(ButtonStyle.Link)
-            .setURL(nftLink)
+            .setURL(nftLink),
+          new ButtonBuilder()
+            .setLabel('View Collection')
+            .setStyle(ButtonStyle.Link)
+            .setURL('https://marketplace.kingdomly.app/collections/0xfb497d7491ac6ec07a3f102d2c37f456b067bbe1')
         );
-
-        await channel.send({ embeds: [embed], components: [button] });
+        channel.send({ embeds: [embed], components: [buttonRow] });
         console.log('✅ Sale posted to Discord.');
       } catch (err) {
         console.error('❌ Failed to send sale message:', err);
@@ -227,7 +232,7 @@ async function testRealSale(ws) {
     console.log('⚡ Test: Scanning recent blocks for real sales...');
 
     let salesFound = 0;
-    const salesTarget = 5;
+    const salesTarget = 1;
 
     let currentBlock = await provider.getBlockNumber();
     console.log('🧩 Current block:', currentBlock);
