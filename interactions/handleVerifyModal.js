@@ -51,8 +51,10 @@ import {
       interaction.type === InteractionType.ModalSubmit &&
       interaction.customId === 'submit-signature'
     ) {
-      await interaction.deferReply({ ephemeral: false });
-  
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferReply({ ephemeral: false });
+      }
+      
       const userId = interaction.user.id;
   
       if (isRateLimited(userId)) {

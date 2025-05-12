@@ -90,9 +90,9 @@ node index.js
 - [x] Role assignment based on ERC-721 holdings
 - [x] Modal input for signature submission
 - [x] Session clearing and rate limiting
-- [x] Cron job to check if user still holds same amount ofNFTs and if not, remove role.
+- [ ] Cron job to check if user still holds same amount ofNFTs and if not, remove role.
 - [ ] Multi-collection support
-- [ ] Sales tracker
+- [x] Sales tracker
 - [ ] Notifications for role revocation
 
 ---
